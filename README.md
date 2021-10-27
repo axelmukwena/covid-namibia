@@ -55,6 +55,8 @@
 
       $ python3 main.py
 
+- Click the localhost link to view the webpage
+
 
 ### Installing or updating packages
 
