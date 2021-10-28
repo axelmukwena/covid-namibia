@@ -4,7 +4,7 @@ from dash import html
 from dash.dependencies import Output, Input
 import plotly.graph_objects as go
 import numpy as np
-import cmapy
+import plotly.express as px
 import random
 import process
 
@@ -46,72 +46,88 @@ def app_layouts():
             ),
             html.Div(
                 children=[
-                    html.Div(
-                        children=[
-                            html.Div(children="Region", className="menu-title"),
-                            dcc.Dropdown(
-                                id="region-filter",
-                                options=[{"label": r, "value": r} for r in regions.keys()],
-                                value="Khomas",
-                                clearable=False,
-                                className="dropdown",
-                            ),
-                        ]
-                    ),
-                    html.Div(
-                        children=[
-                            html.Div(children="Attribute", className="menu-title"),
-                            dcc.Dropdown(
-                                id="attribute-filter",
-                                options=[{"label": c, "value": c} for c in column_names if c != 'Date'],
-                                value="Active Cases",
-                                clearable=False,
-                                # searchable=False,
-                                className="dropdown",
-                            ),
-                        ],
-                    ),
-                    html.Div(
-                        children=[
-                            html.Div(
-                                children="Date Range", className="menu-title"
-                            ),
-                            dcc.DatePickerRange(
-                                id="date-range",
-                                min_date_allowed=date.min().date(),
-                                max_date_allowed=date.max().date(),
-                                start_date=date.min().date(),
-                                end_date=date.max().date(),
-                            ),
-                        ]
-                    ),
+                    html.Div(className='column',
+                             children=[
+                                 html.Div(children="Region", className="menu-title"),
+                                 dcc.Dropdown(
+                                     id="region-filter",
+                                     options=[{"label": r, "value": r} for r in regions.keys()],
+                                     value="Khomas",
+                                     clearable=False,
+                                     className="dropdown",
+                                 ),
+                             ]
+                             ),
+                    html.Div(className='column',
+                             children=[
+                                 html.Div(children="Attribute", className="menu-title"),
+                                 dcc.Dropdown(
+                                     id="attribute-filter",
+                                     options=[{"label": c, "value": c} for c in column_names if c != 'Date'],
+                                     value="Active Cases",
+                                     clearable=False,
+                                     # searchable=False,
+                                     className="dropdown",
+                                 ),
+                             ],
+                             ),
+                    html.Div(className='column',
+                             children=[
+                                 html.Div(
+                                     children="Date Range", className="menu-title"
+                                 ),
+                                 dcc.DatePickerRange(
+                                     id="date-range",
+                                     min_date_allowed=date.min().date(),
+                                     max_date_allowed=date.max().date(),
+                                     start_date=date.min().date(),
+                                     end_date=date.max().date(),
+                                 ),
+                             ]
+                             ),
                 ],
                 className="menu",
             ),
-            html.Div(
-                children=[
-                    html.Div(
-                        children=dcc.Graph(
-                            id="line-chart",
-                            config={"displayModeBar": False},
-                        ),
-                        className="card",
-                    ),
-                ],
-                className="wrapper",
-            ),
-            html.Div(
-                children=[
-                    html.Div(
-                        children=dcc.Graph(
-                            id="bar-chart",
-                            config={"displayModeBar": False},
-                        ),
-                        className="card",
-                    ),
-                ],
-                className="wrapper",
-            ),
+            html.Div(className='content',
+                     children=[
+                         html.Div(
+                             children=[
+                                 html.Div(
+                                     children=dcc.Graph(
+                                         id="line-chart",
+                                         config={"displayModeBar": False},
+                                     ),
+                                     className="card",
+                                 ),
+                             ],
+                             className="wrapper",
+                         ),
+                         html.Div(
+                             children=[
+                                 html.Div(
+                                     children=dcc.Graph(
+                                         id="bar-chart",
+                                         config={"displayModeBar": False},
+                                     ),
+                                     className="card",
+                                 ),
+                             ],
+                             className="wrapper",
+                         ),
+                         html.Div(
+                             children=[
+                                 html.Div(
+                                     children=dcc.Graph(
+                                         id="pie-chart",
+                                         config={"displayModeBar": False},
+                                     ),
+                                     className="card",
+                                 ),
+                             ],
+                             className="wrapper",
+                         ),
+                     ]
+            )
         ]
     )
 
@@ -134,7 +150,11 @@ def bar(filtered_data, column):
 
 
 @app.callback(
-    [Output("line-chart", "figure"), Output("bar-chart", "figure")],
+    [
+        Output("line-chart", "figure"),
+        Output("bar-chart", "figure"),
+        Output("pie-chart", "figure")
+    ],
     [
         Input("region-filter", "value"),
         Input("attribute-filter", "value"),
@@ -164,21 +184,26 @@ def update_line_graph(region, attribute, start_date, end_date):
     resampled_data = filtered_data.resample('M', on='Date').sum()
     # https://stackoverflow.com/a/54276300/8050183
     resampled_data = resampled_data.rename_axis('Date').reset_index()
-    bar_graph = go.Figure(
-        data=[bar(resampled_data, c) for c in column_names[1:]],
-        layout=go.Layout(
-
-        )
-    )
-
+    bar_graph = go.Figure(data=[bar(resampled_data, c) for c in column_names[1:]])
     bar_graph.update_layout(title='Stacked Bar Graph for ' + region,
-                            barmode='stack', xaxis_title='Dates per Month (Click right menu to toggle visibility)', yaxis_title='Covid Cases',
+                            barmode='stack', xaxis_title='Dates per Month (Click/double click right menu to toggle '
+                                                         'visibility)',
+                            yaxis_title='Covid Cases',
                             plot_bgcolor='#ffffff',
                             )
-    line_graph.update_xaxes(showgrid=True, gridwidth=1, gridcolor='#efefef')
-    line_graph.update_yaxes(showgrid=True, gridwidth=1, gridcolor='#efefef')
+    bar_graph.update_xaxes(showgrid=True, gridwidth=1, gridcolor='#efefef')
+    bar_graph.update_yaxes(showgrid=True, gridwidth=1, gridcolor='#efefef')
 
-    return [line_graph, bar_graph]
+    # Pie Chart
+    # This creates a series, then we iterate through the series
+    # to get labels and values
+    pie_data = filtered_data.sum(numeric_only=True)
+    labels, values = [], []
+    [(labels.append(i[0]), values.append(i[1])) for i in pie_data.items()]
+    pie_chart = go.Figure([go.Pie(labels=labels, values=values)])
+    pie_chart.update_layout(title='Pie Chart for ' + region)
+
+    return [line_graph, bar_graph, pie_chart]
 
 
 # Import the data from process.py
