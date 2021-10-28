@@ -2,7 +2,7 @@ import os
 import pandas as pd
 
 regions = {}
-column_names = []
+column_names = set()  # Remember to convert to list in app
 
 
 # `end_date - start_date` outputs a stamp e.g `305 days 12:00:00`
@@ -64,11 +64,11 @@ def region_wide(sheet, filename):
 	# Rename columns to clean names
 	for c in columns:
 		column = c.strip()
-		column_names.append(column)
+		column_names.add(column)
 		df = df.rename(columns={c: c.strip()})
 
 	# Trim dataframe to valid rows
-	start_date = df[column_names[0]][0]
+	start_date = df['Date'][0]
 	rows = valid_rows(start_date)
 	df = df[:rows]
 

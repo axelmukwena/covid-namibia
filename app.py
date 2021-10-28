@@ -4,6 +4,8 @@ from dash import html
 from dash.dependencies import Output, Input
 import plotly.graph_objects as go
 import numpy as np
+import cmapy
+import random
 import process
 
 regions = {}
@@ -61,7 +63,7 @@ def app_layouts():
                             html.Div(children="Attribute", className="menu-title"),
                             dcc.Dropdown(
                                 id="attribute-filter",
-                                options=[{"label": c, "value": c} for c in column_names[1:]],
+                                options=[{"label": c, "value": c} for c in column_names if c != 'Date'],
                                 value="Active Cases",
                                 clearable=False,
                                 # searchable=False,
@@ -90,7 +92,19 @@ def app_layouts():
                 children=[
                     html.Div(
                         children=dcc.Graph(
-                            id="covid-chart",
+                            id="line-chart",
+                            config={"displayModeBar": False},
+                        ),
+                        className="card",
+                    ),
+                ],
+                className="wrapper",
+            ),
+            html.Div(
+                children=[
+                    html.Div(
+                        children=dcc.Graph(
+                            id="bar-chart",
                             config={"displayModeBar": False},
                         ),
                         className="card",
@@ -102,8 +116,25 @@ def app_layouts():
     )
 
 
+# Create random color
+# https://stackoverflow.com/questions/28999287/generate-random-colors-rgb#comment104784319_50218895
+def rgb():
+    color = f"#{random.randrange(0x1000000):06x}"
+    return color
+
+
+def bar(filtered_data, column):
+    b = go.Bar(
+        x=filtered_data['Date'],
+        y=filtered_data[column],
+        name=column,
+        marker=dict(color=rgb())
+    )
+    return b
+
+
 @app.callback(
-    [Output("covid-chart", "figure")],
+    [Output("line-chart", "figure"), Output("bar-chart", "figure")],
     [
         Input("region-filter", "value"),
         Input("attribute-filter", "value"),
@@ -111,23 +142,43 @@ def app_layouts():
         Input("date-range", "end_date"),
     ],
 )
-def update_charts(region, attribute, start_date, end_date):
+def update_line_graph(region, attribute, start_date, end_date):
     reg_data = regions[region]
     mask = ((reg_data['Date'] >= start_date) & (reg_data['Date'] <= end_date))
-
     filtered_data = reg_data.loc[mask, :]
-    bar_graph = go.Figure([go.Scatter(x=filtered_data['Date'], y=filtered_data[attribute],
-                                      name=attribute, line=dict(color='#17B897')
-                                      )])
 
-    bar_graph.update_traces(line_shape="spline")
-    bar_graph.update_layout(title=attribute + ' in ' + region,
-                            xaxis_title='Dates', yaxis_title='Covid Cases',
+    # Line graph
+    line_graph = go.Figure([go.Scatter(x=filtered_data['Date'], y=filtered_data[attribute],
+                                       name=attribute, line=dict(color='#17B897')
+                                       )])
+    line_graph.update_traces(line_shape="spline")
+    line_graph.update_layout(title='Line Graph for ' + attribute + ' in ' + region,
+                             xaxis_title='Dates per Day', yaxis_title='Covid Cases',
+                             plot_bgcolor='#ffffff',
+                             )
+    line_graph.update_xaxes(showgrid=True, gridwidth=1, gridcolor='#efefef')
+    line_graph.update_yaxes(showgrid=True, gridwidth=1, gridcolor='#efefef')
+
+    # Stacked Bar graph
+    # df.resample converts the column used to index column, so convert back
+    resampled_data = filtered_data.resample('M', on='Date').sum()
+    # https://stackoverflow.com/a/54276300/8050183
+    resampled_data = resampled_data.rename_axis('Date').reset_index()
+    bar_graph = go.Figure(
+        data=[bar(resampled_data, c) for c in column_names[1:]],
+        layout=go.Layout(
+
+        )
+    )
+
+    bar_graph.update_layout(title='Stacked Bar Graph for ' + region,
+                            barmode='stack', xaxis_title='Dates per Month (Click right menu to toggle visibility)', yaxis_title='Covid Cases',
                             plot_bgcolor='#ffffff',
                             )
-    bar_graph.update_xaxes(showgrid=True, gridwidth=1, gridcolor='#efefef')
-    bar_graph.update_yaxes(showgrid=True, gridwidth=1, gridcolor='#efefef')
-    return [bar_graph]
+    line_graph.update_xaxes(showgrid=True, gridwidth=1, gridcolor='#efefef')
+    line_graph.update_yaxes(showgrid=True, gridwidth=1, gridcolor='#efefef')
+
+    return [line_graph, bar_graph]
 
 
 # Import the data from process.py
@@ -136,9 +187,8 @@ def data():
 
     process.data()
     regions = process.regions
-    column_names = process.column_names
+    column_names = list(process.column_names)
     date = regions['Khomas']['Date']
-    print()
 
 
 if __name__ == "__main__":
