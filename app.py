@@ -3,24 +3,23 @@ from dash import dcc
 from dash import html
 from dash.dependencies import Output, Input
 import plotly.graph_objects as go
-import numpy as np
-import plotly.express as px
 import random
 import process
 
 regions = {}
 column_names = []
-date = np.array(0)  # Initialize to any data type
+date = None  # Initialize to any data type
 
 external_stylesheets = [
     {
         "href": "https://fonts.googleapis.com/css2?"
                 "family=Lato:wght@400;700&display=swap",
-        "rel": "stylesheet",
+        # "rel": "stylesheet",
     },
 ]
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 server = app.server
+
 app.title = "Covid-19 Cases | Namibia"
 
 
@@ -216,7 +215,8 @@ def data():
     date = regions['Khomas']['Date']
 
 
+data()
+app_layouts()
+
 if __name__ == "__main__":
-    data()
-    app_layouts()
     app.run_server(debug=True)
