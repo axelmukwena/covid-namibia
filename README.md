@@ -83,5 +83,11 @@
 
       $ pip freeze > requirements.txt
 
- 
+# Resources
 
+### Inspiration
+- https://realpython.com/python-dash/
+
+### Deploying to heroku
+- https://www.youtube.com/watch?v=b-M2KQ6_bM4&ab_channel=CharmingData
+- https://github.com/Coding-with-Adam/Dash-by-Plotly/tree/master/Deploy_App_to_Web/Heroku_App
