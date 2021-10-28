@@ -99,7 +99,21 @@ def import_data(root):
 						region_wide(sheet, filename)
 
 
-def data():
+def read_data():
+	global column_names, regions
+	files = os.listdir('dataset/processed/')
+	for file in files:
+		if file.endswith('.csv'):
+			filepath = os.path.join('dataset/processed', file)
+			df = pd.read_csv(filepath, index_col=0)
+			df['Date'] = pd.to_datetime(df['Date'])
+			column_names = df.columns.values
+			regions[file.split('.')[0]] = df
+
+
+def process_data():
+	global column_names
 	import_data('dataset/raw/')
 	# Process data into country
 	country_wide()
+	column_names = list(column_names)

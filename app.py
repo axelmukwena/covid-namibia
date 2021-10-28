@@ -209,9 +209,11 @@ def update_line_graph(region, attribute, start_date, end_date):
 def data():
     global regions, column_names, date
 
-    process.data()
+    # To process data from  `dataset/raw`, uncomment the line below, and comment `process.read_data()`
+    # process.process_data()
+    process.read_data()  # Read processed data
     regions = process.regions
-    column_names = list(process.column_names)
+    column_names = process.column_names
     date = regions['Khomas']['Date']
 
 
