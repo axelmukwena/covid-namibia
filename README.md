@@ -1,6 +1,9 @@
 # Covid-19 Visualization around Namibia
  Developing automatic dashboards which allows users to query and customize visualisations with dash and flask
 
+## Preparation
+- In the project folder, create a folder `dataset/raw/` and place your `xlsx` data files there.
+
 ## Running the program
 #### NB: Any line that starts with `$` indicates that the following text should be executed in the terminal/CMD prompt.
 
@@ -53,7 +56,7 @@
     
 - Run the script...
 
-      $ python3 main.py
+      $ python3 app.py
 
 - Click the localhost link to view the webpage
 

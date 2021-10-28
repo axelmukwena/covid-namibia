@@ -42,8 +42,8 @@ def country_wide():
 			put_date_aside = df['Date']
 
 			# Drop date columns because they cannot be added, only numbers
-			df = df.drop('Date', 1)
-			country = country.drop('Date', 1)
+			df = df.drop('Date', axis=1)
+			country = country.drop('Date', axis=1)
 
 			# Combine df with country dataframes
 			country = country.add(df, fill_value=0)
@@ -53,8 +53,8 @@ def country_wide():
 		regions[region] = regions[region].dropna()
 		write_csv('dataset/processed/', region, regions[region])
 
-	regions['Country'] = country
-	write_csv('dataset/processed/', 'Country', regions['Country'])
+	regions['Entire Country'] = country
+	write_csv('dataset/processed/', 'Entire Country', regions['Entire Country'])
 
 
 def region_wide(sheet, filename):
